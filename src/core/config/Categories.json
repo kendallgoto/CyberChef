@@ -374,7 +374,8 @@
             "Extract EXIF",
             "Extract ID3",
             "Extract Files",
-            "RAKE"
+            "RAKE",
+            "Template"
         ]
     },
     {
