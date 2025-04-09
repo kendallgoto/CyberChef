@@ -1,0 +1,6 @@
+prj:
+  port: 80
+  name: CyberChef
+  project: Misc
+  description: Bake recipes of various data handling operations into a dynamic handling workflow
+  short: cyberchef
