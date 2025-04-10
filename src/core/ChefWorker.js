@@ -72,7 +72,8 @@ self.addEventListener("message", function(e) {
             calculateHighlights(
                 r.data.recipeConfig,
                 r.data.direction,
-                r.data.pos
+                r.data.pos,
+                r.data.output
             );
             break;
         case "setLogLevel":
@@ -191,8 +192,8 @@ async function getDishTitle(data) {
  * @param {number} pos.start - The start offset.
  * @param {number} pos.end - The end offset.
  */
-async function calculateHighlights(recipeConfig, direction, pos) {
-    pos = await self.chef.calculateHighlights(recipeConfig, direction, pos);
+async function calculateHighlights(recipeConfig, direction, pos, output) {
+    pos = await self.chef.calculateHighlights(recipeConfig, direction, pos, output);
 
     self.postMessage({
         action: "highlightsCalculated",

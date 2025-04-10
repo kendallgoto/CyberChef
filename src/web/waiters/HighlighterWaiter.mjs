@@ -68,7 +68,7 @@ class HighlighterWaiter {
                 start: Math.floor(range.from * ratio),
                 end: Math.floor(range.to * ratio)
             }];
-            this.manager.worker.highlight(this.app.getRecipeConfig(), direction, pos);
+            this.manager.worker.highlight(this.app.getRecipeConfig(), direction, pos, this.manager.output.currentOutputCache);
         }
     }
 

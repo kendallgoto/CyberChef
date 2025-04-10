@@ -125,7 +125,7 @@ class Chef {
      * @param {number} pos.end - The end offset.
      * @returns {Object}
      */
-    async calculateHighlights(recipeConfig, direction, pos) {
+    async calculateHighlights(recipeConfig, direction, pos, output) {
         const recipe = new Recipe(recipeConfig);
         const highlights = await recipe.generateHighlightList();
 
@@ -141,7 +141,7 @@ class Chef {
 
             if (typeof func == "function") {
                 try {
-                    pos = func(pos, highlights[i].args);
+                    pos = func(pos, highlights[i].args, output);
                 } catch (err) {
                     // Throw away highlighting errors
                     pos = [];

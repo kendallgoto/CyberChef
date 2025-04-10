@@ -868,7 +868,7 @@ class WorkerWaiter {
      * @param {number} pos.start - The start offset.
      * @param {number} pos.end - The end offset.
      */
-    highlight(recipeConfig, direction, pos) {
+    highlight(recipeConfig, direction, pos, output) {
         let workerIdx = this.getInactiveChefWorker(false);
         if (workerIdx === -1) {
             workerIdx = this.addChefWorker();
@@ -879,7 +879,8 @@ class WorkerWaiter {
             data: {
                 recipeConfig: recipeConfig,
                 direction: direction,
-                pos: pos
+                pos: pos,
+                output: output
             }
         });
     }
