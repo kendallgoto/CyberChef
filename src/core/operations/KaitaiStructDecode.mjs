@@ -194,6 +194,84 @@ class KaitaiStructDecode extends Operation {
     }
 
     /**
+     * Interface for forward highlighter
+     *
+     * @param {Object[]} pos
+     * @param {number} pos[].start
+     * @param {number} pos[].end
+     * @param {Object[]} args
+     * @returns {Object[]} pos
+     */
+    highlight(pos, args, output) {
+        const indexRegex = /\[(\d+):(\d+)\]:/;
+        let selMinStart = Number.MAX_SAFE_INTEGER, selMaxEnd = 0;
+        const typedBuffer = new Uint8Array(output);
+        for (const selection of pos) {
+            // for each line; but keeping track of line's starting index
+            for(let lineStartOffset = 0; lineStartOffset < typedBuffer.length && lineStartOffset >= 0;) {
+                let lineEndOffset = typedBuffer.indexOf("\n".charCodeAt(0), lineStartOffset + 1);
+                let cappedEnd = (lineEndOffset >= 0) ? lineEndOffset : typedBuffer.length;
+
+                // on each line, find the [nn:nn] byte index text
+                const line = new TextDecoder().decode(output.slice(lineStartOffset, cappedEnd)).trim();
+                const match = line.match(indexRegex)
+                if(match && match.length == 3) {
+                    const regionStart = parseInt(match[1]);
+                    const regionEnd = parseInt(match[2]);
+                    // is there an intersection between our selection and the bytes described by this line?
+                    if((selection.start >= regionStart && selection.start < regionEnd) || 
+                    (selection.end > regionStart && selection.end <= regionEnd)) {
+                        selMinStart = Math.min(selMinStart, (lineStartOffset == 0) ? 0 : lineStartOffset + 1);
+                        selMaxEnd = Math.max(selMaxEnd, cappedEnd);
+                    }
+                }
+
+                lineStartOffset = lineEndOffset;
+            }
+        }
+        return (selMinStart == Number.MAX_SAFE_INTEGER) ? [] : [{
+            start: selMinStart,
+            end: selMaxEnd
+        }]
+    }
+
+    /**
+     * Interface for reverse highlighter
+     *
+     * @param {Object[]} pos
+     * @param {number} pos[].start
+     * @param {number} pos[].end
+     * @param {Object[]} args
+     * @returns {Object[]} pos
+     */
+    highlightReverse(pos, args, output) {
+        const typedBuffer = new Uint8Array(output);
+        const indexRegex = /\[(\d+):(\d+)\]:/;
+        let selMinStart = Number.MAX_SAFE_INTEGER, selMaxEnd = 0;
+        for (const selection of pos) {
+            // expand selection to entire lines between start-end
+            const startIndex = typedBuffer.lastIndexOf("\n".charCodeAt(0), (selection.start || 1) - 1) + 1; // find first \n before start (or 0 if selection starts at beginning)
+            let endIndex = typedBuffer.indexOf("\n".charCodeAt(0), selection.end); // find first \n after end
+            if(endIndex == -1) endIndex = typedBuffer.length - 1;
+            const selectedLines = new TextDecoder().decode(output.slice(startIndex, endIndex)).trim().split("\n");
+            // on each line, find the [nn:nn] byte index text
+            for(const line of selectedLines) {
+                const match = line.match(indexRegex)
+                if(match && match.length == 3) {
+                    // we can only export one selection, so capture the widest region that we see
+                    // this doesn't really work for non-contiguous offsets for the moment.
+                    selMinStart = Math.min(selMinStart, parseInt(match[1]));
+                    selMaxEnd = Math.max(selMaxEnd, parseInt(match[2]));
+                }
+            }
+        }
+        return (selMinStart == Number.MAX_SAFE_INTEGER) ? [] : [{
+            start: selMinStart,
+            end: selMaxEnd
+        }]
+    }
+
+    /**
      * Creates an annotated tree of a Kaitai object by walking the structure and expanding debug
      * annotations including type hints, binary offsets, and enum strings
      *
